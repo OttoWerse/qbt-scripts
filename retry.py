@@ -5,7 +5,7 @@ from subprocess import check_output
 RECHECK_MISSING_FILES = False
 
 '''QBT CLI settings'''
-qbt_use_system_config = False #Set to True to use QBT CLI settings, otherwise use settings below
+qbt_use_system_config = True #Set to False to use settings below, otherwise QBT CLI settings cache will be used
 qbt_username = 'admin'
 qbt_password = 'adminadmin'
 qbt_url = 'http://localhost:8080'
@@ -17,10 +17,11 @@ if __name__ == '__main__':
             qbt_get_command = f'qbt torrent list --format json --filter errored'
         else:
             qbt_get_command = f'qbt torrent list --username {qbt_username} --password {qbt_password} --url {qbt_url} --format json --filter errored'
-
         qbt_get_result = check_output(qbt_get_command)
-        qbt_json = json.loads(qbt_get_result)
-
+        qbt_json = json.loads(qbt_get_result, strict=False)
+    except Exception as e:
+        print(f'Exception getting Data from qBittorrent: {e}')
+    try:
         for qbt_entry in qbt_json:
             qbt_entry_name = qbt_entry['name']
             qbt_entry_hash = qbt_entry['hash']
@@ -49,7 +50,6 @@ if __name__ == '__main__':
             except KeyboardInterrupt:
                 pass
             except Exception as e:
-                print(e)
-
+                print(f'Exception sending retry command to qBittorrent: {e}')
     except Exception as e:
-        print(e)
+        print(f'Exception in loop over all entries: {e}')
